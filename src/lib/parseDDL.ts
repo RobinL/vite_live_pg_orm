@@ -107,6 +107,42 @@ export function parseDDL(ddl: string) {
             }
 
             tables[name] = { name, columns, fks, primaryKey };
+        } else if (getTypeStr(stmt) === 'alter table') {
+            // Handle: ALTER TABLE ONLY public.orders ADD CONSTRAINT ... FOREIGN KEY (...)
+            const tName = getNameStr(get(stmt, 'table'));
+            if (!tName) continue;
+            if (!tables[tName]) {
+                tables[tName] = { name: tName, columns: [], fks: [], primaryKey: [] };
+            }
+            const changesU = get(stmt, 'changes');
+            const changes: unknown[] = Array.isArray(changesU) ? changesU : [];
+            for (const chU of changes) {
+                const ch = chU as Record<string, unknown>;
+                if (getTypeStr(ch) !== 'add constraint') continue;
+                const cons = get(ch, 'constraint') as Record<string, unknown> | undefined;
+                if (!cons) continue;
+                const ctype = getTypeStr(cons);
+                if (ctype === 'foreign key') {
+                    const fromColsU = get(cons, 'localColumns') ?? get(cons, 'columns');
+                    const fromColsArr: unknown[] = Array.isArray(fromColsU) ? fromColsU : [];
+                    const fromCols = fromColsArr.map((x) => getNameStr(x)).filter((v): v is string => typeof v === 'string');
+
+                    const toTbl = getNameStr(get(cons, 'foreignTable'))
+                        ?? getNameStr(get(cons, 'table'))
+                        ?? '';
+                    const toColsU = get(cons, 'foreignColumns') ?? get(cons, 'columns');
+                    const toColsArr: unknown[] = Array.isArray(toColsU) ? toColsU : [];
+                    const toCols = toColsArr.map((x) => getNameStr(x)).filter((v): v is string => typeof v === 'string');
+
+                    tables[tName].fks.push({ fromCols, toTable: toTbl, toCols });
+                }
+                if (ctype === 'primary key') {
+                    const colsU = get(cons, 'columns') ?? get(cons, 'localColumns');
+                    const cols: unknown[] = Array.isArray(colsU) ? colsU : [];
+                    const names = cols.map((x) => getNameStr(x)).filter((v): v is string => typeof v === 'string');
+                    tables[tName].primaryKey.splice(0, tables[tName].primaryKey.length, ...names);
+                }
+            }
         }
     }
     return { tables };
