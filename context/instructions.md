@@ -66,6 +66,7 @@ git commit -m "stage 0 scaffold"
 
 ---
 
+
 ## STAGE 5 — Selection rules & base‑table inference (1 h)
 
 | Goal                                                                       | Outcome                    |
@@ -74,36 +75,15 @@ git commit -m "stage 0 scaffold"
 
 ### Tasks
 
-1. **Mutual exclusivity** in `toggleSelection`:
-
-   ```ts
-   if (id.endsWith('.*')) {
-     // remove any `${table}.col` selections
-   } else {
-     // if selecting a column, remove `${table}.*` if present
-   }
-   ```
-2. **Base table derivation**
-   Extend store:
-
-   ```ts
-   base: null as string | null,
-   setBase: (tbl: string) => set({ base: tbl }),
-   ```
-
-   In `toggleSelection`, if `base` is null **and** id belongs to some table, set it.
-3. Show base under SQL pane header:
-
-   ```tsx
-   const base = useStore((s) => s.base);
-   <header>SQL {base && <span className="text-sm text-gray-500">(base: {base})</span>}</header>
-   ```
+- [x] Mutual exclusivity in `toggleSelection`
+- [x] Base table derivation
+- [x] Show base under SQL pane header
 
 ### Acceptance
 
-* Select `orders.*` → base auto‑set to `orders`.
-* Selecting `customers.name` next does **not** change base.
-* Checking `orders.*` then checking `orders.id` unchecks the star and leaves the column ticked.
+- [x] Select `orders.*` → base auto‑set to `orders`.
+- [x] Selecting `customers.name` next does **not** change base.
+- [x] Checking `orders.*` then checking `orders.id` unchecks the star and leaves the column ticked.
 
 ---
 
