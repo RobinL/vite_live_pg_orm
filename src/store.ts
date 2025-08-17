@@ -9,7 +9,7 @@ export const useStore = create<{
     setSchema: (g: SchemaGraph | null) => void;
     selections: string[];                // 'table.*' or 'table.column'
     toggleSelection: (id: string) => void;
-}>((set, get) => ({
+}>((set) => ({
     ddl: '',
     setDDL: (ddl) => set({ ddl }),
     schema: null,
