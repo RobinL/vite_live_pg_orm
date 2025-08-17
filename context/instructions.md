@@ -55,103 +55,14 @@ git commit -m "stage 0 scaffold"
 
 ---
 
+
 ## STAGE 4 — Real DDL parse & tree render (2 h)
-
-| Goal                                                              | Outcome                   |
-| ----------------------------------------------------------------- | ------------------------- |
-| Pasting sample DDL shows collapsible tables & columns (unchecked) | verifies parser + tree UI |
-
-### Tasks
-
-1. `npm install pgsql-ast-parser`
-2. **Parser helper** `src/lib/parseDDL.ts`
-
-   ```ts
-   import { parse } from 'pgsql-ast-parser';
-   export interface Table { name: string; columns: string[]; fks: ForeignKey[]; primaryKey: string[] }
-   export interface ForeignKey { fromCols: string[]; toTable: string; toCols: string[] }
-
-   export function parseDDL(ddl: string) {
-     const ast = parse(ddl);
-     const tables: Record<string, Table> = {};
-     // iterate ast, identify 'create table' nodes (see library docs) …
-     return { tables };
-   }
-   ```
-
-   (You only need table names & column names for this stage — skip FKs for now.)
-3. In `App.tsx` add:
-
-   ```tsx
-   const ddl = useStore((s) => s.ddl);
-   const setSchema = useStore((s) => s.setSchema);
-   useEffect(() => {
-     try {
-       const g = ddl.trim() ? parseDDL(ddl) : null;
-       setSchema(g);
-     } catch (e) {
-       setSchema(null);
-       console.error(e);
-     }
-   }, [ddl]);
-   ```
-4. **SchemaTree component** `SchemaTree.tsx`
-
-   ```tsx
-   const { schema, selections, toggleSelection } = useStore();
-   if (!schema) return <p className="text-gray-500">No schema.</p>;
-
-   return (
-     <ul className="space-y-1">
-       {Object.values(schema.tables).map((t) => (
-         <li key={t.name}>
-           <details>
-             <summary className="cursor-pointer">
-               <input
-                 type="checkbox"
-                 className="mr-1"
-                 checked={selections.includes(`${t.name}.*`)}
-                 onChange={() => toggleSelection(`${t.name}.*`)}
-               />
-               {t.name}
-             </summary>
-             <ul className="ml-4">
-               {t.columns.map((c) => (
-                 <li key={c}>
-                   <label className="inline-flex items-center space-x-1">
-                     <input
-                       type="checkbox"
-                       checked={selections.includes(`${t.name}.${c}`)}
-                       onChange={() => toggleSelection(`${t.name}.${c}`)}
-                     />
-                     <span>{c}</span>
-                   </label>
-                 </li>
-               ))}
-             </ul>
-           </details>
-         </li>
-       ))}
-     </ul>
-   );
-   ```
-5. Replace placeholder in Schema pane with `<SchemaTree />`.
-6. **Test DDL** (paste in browser):
-
-   ```sql
-   CREATE TABLE customers (id INT PRIMARY KEY, name TEXT, email TEXT);
-   CREATE TABLE orders (
-     id INT PRIMARY KEY,
-     total NUMERIC,
-     customer_id INT REFERENCES customers(id)
-   );
-   ```
-
-### Acceptance
-
-* Tables `customers` & `orders` appear collapsed.
-* Expanding shows column checkboxes.
-* Checking/unchecking toggles `useStore.getState().selections`.
+- [x] pgsql-ast-parser installed
+- [x] parseDDL helper created
+- [x] DDL parsing wired in App
+- [x] SchemaTree component implemented
+- [x] Schema pane replaced with tree UI
+- [x] Acceptance: tables and columns appear, checkboxes toggle selections
 
 ---
 
