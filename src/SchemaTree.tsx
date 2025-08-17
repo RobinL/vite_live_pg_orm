@@ -8,35 +8,39 @@ export default function SchemaTree() {
 
     return (
         <ul className="space-y-1">
-            {Object.values(schema.tables).map((t) => (
-                <li key={t.name}>
-                    <details>
-                        <summary className="cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="mr-1"
-                                checked={selections.includes(`${t.name}.*`)}
-                                onChange={() => toggleSelection(`${t.name}.*`)}
-                            />
-                            {t.name}
-                        </summary>
-                        <ul className="ml-4">
-                            {t.columns.map((c) => (
-                                <li key={c}>
-                                    <label className="inline-flex items-center space-x-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={selections.includes(`${t.name}.${c}`)}
-                                            onChange={() => toggleSelection(`${t.name}.${c}`)}
-                                        />
-                                        <span>{c}</span>
-                                    </label>
-                                </li>
-                            ))}
-                        </ul>
-                    </details>
-                </li>
-            ))}
+            {Object.values(schema.tables)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((t) => (
+                    <li key={t.name}>
+                        <details open={false}>
+                            <summary className="cursor-pointer flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    className="mr-1"
+                                    checked={selections.includes(`${t.name}.*`)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={() => toggleSelection(`${t.name}.*`)}
+                                />
+                                {t.name}
+                            </summary>
+                            <ul className="ml-4">
+                                {t.columns.slice().sort((a, b) => a.localeCompare(b)).map((c) => (
+                                    <li key={c}>
+                                        <label className="inline-flex items-center space-x-1">
+                                            <input
+                                                type="checkbox"
+                                                checked={selections.includes(`${t.name}.${c}`)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={() => toggleSelection(`${t.name}.${c}`)}
+                                            />
+                                            <span>{c}</span>
+                                        </label>
+                                    </li>
+                                ))}
+                            </ul>
+                        </details>
+                    </li>
+                ))}
         </ul>
     );
 }

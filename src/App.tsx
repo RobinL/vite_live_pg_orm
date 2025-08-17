@@ -1,6 +1,6 @@
 import { useStore } from './store';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { parseDDL } from './lib/parseDDL';
 import SchemaTree from './SchemaTree';
 
@@ -10,15 +10,22 @@ export default function App() {
   const ddlLen = useStore((s) => s.ddl.length);
   const setSchema = useStore((s) => s.setSchema);
   const base = useStore((s) => s.base);
+  const [parseError, setParseError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const g = ddl.trim() ? parseDDL(ddl) : null;
-      setSchema(g);
-    } catch (e) {
-      setSchema(null);
-      console.error(e);
-    }
+    const id = setTimeout(() => {
+      try {
+        const g = ddl.trim() ? parseDDL(ddl) : null;
+        setSchema(g);
+        setParseError(null);
+      } catch (e: unknown) {
+        setSchema(null);
+        const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message?: unknown }).message) : 'Parse error';
+        setParseError(msg);
+        console.error(e);
+      }
+    }, 300);
+    return () => clearTimeout(id);
   }, [ddl, setSchema]);
   return (
     <div className="h-screen grid grid-cols-1 md:grid-cols-3 gap-2 p-2 font-mono">
@@ -36,6 +43,7 @@ export default function App() {
       {/* Schema tree */}
       <section className="border p-2 overflow-auto">
         <header className="font-bold mb-1">Schema</header>
+        {parseError && <p className="text-red-600 text-sm mb-1">{parseError}</p>}
         {ddlLen ? <SchemaTree /> : <p className="text-gray-500">No schema yet.</p>}
       </section>
 

@@ -26,23 +26,20 @@ export const useStore = create<{
             const [table, rest] = id.split('.', 2);
             const isStar = rest === '*';
 
-            // Start from current selections, then toggle
             let next = isSelected
                 ? s.selections.filter((x) => x !== id)
                 : [...s.selections, id];
 
             if (!isSelected) {
                 if (isStar) {
-                    // Selecting table.* removes any table.column entries for that table
                     next = next.filter((x) => !x.startsWith(`${table}.`) || x === id);
                 } else {
-                    // Selecting a column removes table.* if present
                     next = next.filter((x) => x !== `${table}.*`);
                 }
             }
 
-            // If base is not yet set and this selection relates to a table, set it
-            const base = s.base ?? table ?? null;
+            // Only set base when we ADDED a selection and base is currently unset
+            const base = !isSelected && !s.base ? table : s.base;
             return { selections: next, base };
         }),
 }));
