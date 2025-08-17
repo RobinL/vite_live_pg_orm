@@ -38,8 +38,14 @@ export const useStore = create<{
                 }
             }
 
-            // Only set base when we ADDED a selection and base is currently unset
-            const base = !isSelected && !s.base ? table : s.base;
+            // Base handling:
+            // 1) If current base has no remaining selections, clear it.
+            // 2) If we ADDED a selection and base is unset, set base to this table.
+            const baseHasSelections = s.base ? next.some((x) => x.startsWith(`${s.base}.`)) : false;
+            let base: string | null = baseHasSelections ? s.base : null;
+            if (!isSelected && !base) {
+                base = table;
+            }
             return { selections: next, base };
         }),
 }));
