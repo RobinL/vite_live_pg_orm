@@ -1,19 +1,35 @@
 import { useStore } from './store';
+import { useState, useMemo } from 'react';
 
 export default function SchemaTree() {
     const schema = useStore((s) => s.schema);
     const selections = useStore((s) => s.selections);
     const toggleSelection = useStore((s) => s.toggleSelection);
+    const [q, setQ] = useState('');
+    const tables = useMemo(() => {
+        const list = schema ? Object.values(schema.tables) : [];
+        return list.slice().sort((a, b) => a.name.localeCompare(b.name));
+    }, [schema]);
+    const filtered = useMemo(() => {
+        const needle = q.trim().toLowerCase();
+        if (!needle) return tables;
+        return tables.filter((t) => t.name.toLowerCase().includes(needle));
+    }, [tables, q]);
     if (!schema) return <p className="text-gray-500">No schema.</p>;
 
     return (
-        <ul className="space-y-1">
-            {Object.values(schema.tables)
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((t) => (
+        <div>
+            <input
+                className="w-full border p-1 mb-2 text-sm"
+                placeholder="Search tables…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+            />
+            <ul className="space-y-1">
+                {filtered.map((t) => (
                     <li key={t.name}>
                         <details open={false}>
-                            <summary className="cursor-pointer flex items-center gap-2">
+                            <summary className="cursor-pointer flex items-center gap-2 rounded px-1 hover:bg-slate-100">
                                 <input
                                     type="checkbox"
                                     className="mr-1"
@@ -41,6 +57,7 @@ export default function SchemaTree() {
                         </details>
                     </li>
                 ))}
-        </ul>
+            </ul>
+        </div>
     );
 }

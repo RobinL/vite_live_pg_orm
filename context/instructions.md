@@ -135,22 +135,16 @@ git commit -m "stage 0 scaffold"
 
 ### Tasks
 
-1. Collapse all tables by default (`<details open={false}>`).
-2. Add **search box** above tree: filters tables by substring (simple `.filter()`).
-3. Add **Copy** button:
-
-   ```tsx
-   navigator.clipboard.writeText(sql)
-   ```
-4. Tailwind classes: `summary:hover:bg-slate-100`, sticky SQL header on long output.
-5. Format textarea monospace (`font-mono`) and auto‑grow rows (`rows={ddl.split('\n').length+2}`).
-6. Resize panes via CSS `resize` on middle pane if you like.
+- [x] Collapse all tables by default (`<details open={false}>`).
+- [x] Add search box to filter tables.
+- [x] Add Copy button and sticky SQL header.
+- [x] Textarea monospace and auto‑grow rows.
 
 ### Acceptance
 
-* With >10 tables, search narrows instantly.
-* Copy button copies exact SQL (paste in Notepad).
-* Tables collapsed on first render.
+- [x] With many tables, search narrows instantly.
+- [x] Copy button copies exact SQL.
+- [x] Tables collapsed on first render.
 
 ---
 

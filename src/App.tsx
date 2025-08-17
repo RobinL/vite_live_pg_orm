@@ -36,10 +36,11 @@ export default function App() {
       <section className="border p-2 flex flex-col">
         <header className="font-bold mb-1">DDL</header>
         <textarea
-          className="flex-1 border p-1 resize-none"
+          className="flex-1 border p-1 resize-none font-mono"
           placeholder="Paste CREATE TABLE …"
           value={ddl}
           onChange={e => setDDL(e.target.value)}
+          rows={Math.min(20, Math.max(8, ddl.split('\n').length + 2))}
         />
       </section>
 
@@ -52,7 +53,16 @@ export default function App() {
 
       {/* SQL output */}
       <section className="border p-2 overflow-auto bg-gray-50">
-        <header className="font-bold mb-1">SQL {base && <span className="text-sm text-gray-500">(base: {base})</span>}</header>
+        <header className="font-bold mb-1 sticky top-0 bg-gray-50/80 backdrop-blur z-10 flex items-center justify-between">
+          <span>SQL {base && <span className="text-sm text-gray-500">(base: {base})</span>}</span>
+          <button
+            className="text-xs border rounded px-2 py-1 hover:bg-slate-100"
+            onClick={() => {
+              const { sql } = generateSql(schema, base, selections);
+              navigator.clipboard.writeText(sql);
+            }}
+          >Copy</button>
+        </header>
         {(() => {
           const { sql, warnings } = generateSql(schema, base, selections); return (
             <>
