@@ -1,5 +1,9 @@
+import { useStore } from './store';
 
 export default function App() {
+  const ddl = useStore((s) => s.ddl);
+  const setDDL = useStore((s) => s.setDDL);
+  const ddlLen = useStore((s) => s.ddl.length);
   return (
     <div className="h-screen grid grid-cols-1 md:grid-cols-3 gap-2 p-2 font-mono">
       {/* DDL input */}
@@ -8,14 +12,15 @@ export default function App() {
         <textarea
           className="flex-1 border p-1 resize-none"
           placeholder="Paste CREATE TABLE …"
+          value={ddl}
+          onChange={e => setDDL(e.target.value)}
         />
       </section>
 
       {/* Schema tree */}
       <section className="border p-2 overflow-auto">
         <header className="font-bold mb-1">Schema</header>
-        {/* placeholder */}
-        <p className="text-gray-500">No schema yet.</p>
+        <p>{ddlLen ? `${ddlLen} chars in DDL` : 'No schema yet.'}</p>
       </section>
 
       {/* SQL output */}

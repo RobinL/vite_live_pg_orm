@@ -45,59 +45,13 @@ git commit -m "stage 0 scaffold"
 - [x] Acceptance: Responsive panes, <details> demo
 
 
+
 ## STAGE 3 — Global state (ddl, schema, selections) (1 h)
-
-| Goal                                                              | Outcome                |
-| ----------------------------------------------------------------- | ---------------------- |
-| typing DDL stores in Zustand; schema placeholder shows char count | proves reactive wiring |
-
-### Tasks
-
-1. `npm install zustand`
-2. `src/store.ts`
-
-   ```ts
-   import { create } from 'zustand';
-
-   export interface SchemaGraph { tables: Record<string, unknown> } // temp
-
-   export const useStore = create<{
-     ddl: string;
-     setDDL: (s: string) => void;
-     schema: SchemaGraph | null;
-     setSchema: (g: SchemaGraph | null) => void;
-     selections: string[];                // 'table.*' or 'table.column'
-     toggleSelection: (id: string) => void;
-   }>((set, get) => ({
-     ddl: '',
-     setDDL: (ddl) => set({ ddl }),
-     schema: null,
-     setSchema: (schema) => set({ schema }),
-     selections: [],
-     toggleSelection: (id) =>
-       set((s) =>
-         s.selections.includes(id)
-           ? { selections: s.selections.filter((x) => x !== id) }
-           : { selections: [...s.selections, id] }
-       ),
-   }));
-   ```
-3. Wire textarea:
-
-   ```tsx
-   const { ddl, setDDL } = useStore();
-   <textarea value={ddl} onChange={(e) => setDDL(e.target.value)} … />
-   ```
-4. In Schema pane:
-
-   ```tsx
-   const ddlLen = useStore((s) => s.ddl.length);
-   <p>{ddlLen ? `${ddlLen} chars in DDL` : 'No schema yet.'}</p>
-   ```
-
-### Acceptance
-
-* Type “abc” → Schema pane shows “3 chars in DDL”.
+- [x] Zustand installed
+- [x] store.ts created
+- [x] Textarea wired to store
+- [x] Schema pane shows DDL char count
+- [x] Acceptance: typing updates count reactively
 
 ---
 
