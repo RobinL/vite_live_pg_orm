@@ -53,9 +53,18 @@ export default function App() {
       {/* SQL output */}
       <section className="border p-2 overflow-auto bg-gray-50">
         <header className="font-bold mb-1">SQL {base && <span className="text-sm text-gray-500">(base: {base})</span>}</header>
-        <pre className="whitespace-pre-wrap text-sm text-gray-700">
-          {generateSql(schema, base, selections)}
-        </pre>
+        {(() => {
+          const { sql, warnings } = generateSql(schema, base, selections); return (
+            <>
+              {warnings.length > 0 && (
+                <ul className="mb-2 text-sm text-amber-700 list-disc pl-5">
+                  {warnings.map((w, i) => (<li key={i}>{w}</li>))}
+                </ul>
+              )}
+              <pre className="whitespace-pre-wrap text-sm text-gray-700">{sql}</pre>
+            </>
+          );
+        })()}
       </section>
     </div>
   );

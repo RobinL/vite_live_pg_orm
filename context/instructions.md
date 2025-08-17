@@ -114,47 +114,16 @@ git commit -m "stage 0 scaffold"
 
 ### Tasks
 
-> **Everything here is pure TypeScript; unit‑test in Vitest** (`npm install -D vitest @testing-library/react`).
-
-1. **Enrich schema graph** in `parseDDL`: collect
-
-   * `table.columns: string[]`
-   * `table.primaryKey`
-   * `table.fks: { fromCols: string[]; toTable; toCols: string[] }[]`
-2. **Planner helpers**
-   *`joinPlanner.ts`* (use code from “simple join builder” earlier):
-
-   * `shortestPathBFS`
-   * `unionEdges`
-   * `orderEdgesFromBase`
-   * `assignAliases`
-   * `buildOnClause`
-   * `generateSql(...)` puts it together:
-
-     1. Determine tables involved from selections.
-     2. BFS per table; warn if unreachable.
-     3. Union edges, alias, build SELECT list:
-
-        * if `table.*` selected, push `${alias}.*`
-        * else push `${alias}."col"` for each column.
-     4. Build `FROM` + `LEFT JOIN`s.
-     5. `sql-formatter` the result and append `;`.
-3. **SQL pane** now shows real query.
-4. **Warnings** — return `{ sql, warnings }`; render warnings list above `<pre>`.
+- [x] Enrich schema graph (PK/FK) in `parseDDL`
+- [x] Implement BFS pathing, union, ordering, aliases, ON clause
+- [x] `generateSql` returns `{ sql, warnings }` and uses `sql-formatter`
+- [x] Render warnings above SQL pane
 
 ### Acceptance
 
-1. With test DDL: select `orders.*` only
-
-   ```sql
-   SELECT
-     t0.*
-   FROM
-     orders AS t0;
-   ```
-2. Select `orders.*` **and** `customers.name, customers.email`
-   Query shows one LEFT JOIN to customers with two qualified columns.
-3. Select a table that has no FK path → warnings show “No FK path …”; SQL omits that table’s columns.
+- [x] `orders.*` only → SELECT t0.* FROM orders AS t0;
+- [x] `orders.*` + `customers.name, customers.email` → one LEFT JOIN with qualified columns
+- [x] Unreachable table → shows warning and omits that table’s columns
 
 ---
 
