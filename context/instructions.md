@@ -18,140 +18,32 @@ It is written as a sequence of **verifiable stages**; after finishing (and commi
 
 ---
 
-## STAGE 0 — Repo hygiene (0.5 h)
-
-| Goal                           | Outcome                 |
-| ------------------------------ | ----------------------- |
-| baseline project, lint, format | future code stays clean |
-
-### Tasks
-
-1. Initialise repo & tools
-
-   ```bash
-   mkdir join-builder && cd $_ && git init
-   git checkout -b feat/00-scaffold
-   npm init -y
-   corepack enable                     # enables pnpm/yarn if desired
-   npm install -D typescript eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier
-   ```
-2. **TS config**
-   *`tsconfig.json`* (minimum):
-
-   ```json
-   { "compilerOptions": { "target": "ES2022", "module": "ESNext", "jsx": "react-jsx", "strict": true, "moduleResolution": "Node", "types": ["vite/client"] } }
-   ```
-3. **ESLint + Prettier**
-   *`.eslintrc.json`*
-
-   ```json
-   { "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"] }
-   ```
-4. Optional: `husky` pre‑commit hook running `npm run lint && npm run format`.
-
-### Acceptance
-
-```bash
-npm run lint   # → 0 errors, exits 0
 git commit -m "stage 0 scaffold"
-```
 
----
+## STAGE 0 — Repo hygiene (0.5 h)
+- [x] Initialise repo & tools
+- [x] TS config
+- [x] ESLint + Prettier
+- [x] Optional: husky pre‑commit hook
+- [x] Acceptance: npm run lint, commit
+
+
 
 ## STAGE 1 — Vite + React boilerplate (1 h)
+- [x] Scaffold Vite + React
+- [x] Replace App.tsx with hello banner
+- [x] Acceptance: Browser shows “Hello • Stage 1”, HMR works
 
-| Goal                                               | Outcome                   |
-| -------------------------------------------------- | ------------------------- |
-| app loads at `localhost:5173` showing hello banner | confirms dev server & HMR |
 
-### Tasks
-
-1. Scaffold:
-
-   ```bash
-   npm create vite@latest . -- --template react-ts
-   npm install
-   npm run dev
-   ```
-2. Replace `App.tsx`:
-
-   ```tsx
-   export default function App() {
-     return (
-       <div className="h-screen flex items-center justify-center text-2xl">
-         Hello • Stage 1
-       </div>
-     );
-   }
-   ```
-
-### Acceptance
-
-* Browser auto‑opens; text “Hello • Stage 1” appears.
-* Edit the text → hot‑reload without full refresh.
-
----
 
 ## STAGE 2 — 3‑pane responsive layout (1 h)
+- [x] Add Tailwind (v4, no CLI)
+- [x] postcss.config.js
+- [x] src/index.css
+- [x] Import CSS in entry
+- [x] Replace App.tsx with 3-pane layout
+- [x] Acceptance: Responsive panes, <details> demo
 
-| Goal                                                               | Outcome                                          |
-| ------------------------------------------------------------------ | ------------------------------------------------ |
-| skeleton UI: DDL textarea, schema tree placeholder, SQL output box | positions fixed; collapsible `<details>` working |
-
-### Tasks
-
-1. Add Tailwind:
-
-   ```bash
-   npm install -D tailwindcss postcss autoprefixer
-   npx tailwindcss init -p
-   ```
-
-   `tailwind.config.js` → `content:['./index.html','./src/**/*.{ts,tsx}']`
-2. Replace `App.tsx` with:
-
-   ```tsx
-   export default function App() {
-     return (
-       <div className="h-screen grid grid-cols-1 md:grid-cols-3 gap-2 p-2 font-mono">
-         {/* DDL input */}
-         <section className="border p-2 flex flex-col">
-           <header className="font-bold mb-1">DDL</header>
-           <textarea
-             className="flex-1 border p-1 resize-none"
-             placeholder="Paste CREATE TABLE …"
-           />
-         </section>
-
-         {/* Schema tree */}
-         <section className="border p-2 overflow-auto">
-           <header className="font-bold mb-1">Schema</header>
-           {/* placeholder */}
-           <p className="text-gray-500">No schema yet.</p>
-         </section>
-
-         {/* SQL output */}
-         <section className="border p-2 overflow-auto bg-gray-50">
-           <header className="font-bold mb-1">SQL</header>
-           <pre className="whitespace-pre-wrap text-sm text-gray-700">
-   ```
-
-\-- SQL appears here </pre> </section> </div>
-);
-}
-
-````
-
-### Acceptance
-- Shrink viewport: panes stack; on ≥768 px they sit side‑by‑side.
-- `<details>` demo:
-```html
-<details><summary>orders</summary><p>columns…</p></details>
-````
-
-Add anywhere; toggles open/closed.
-
----
 
 ## STAGE 3 — Global state (ddl, schema, selections) (1 h)
 
