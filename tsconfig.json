@@ -1,12 +1,7 @@
 {
-    "compilerOptions": {
-        "target": "ES2022",
-        "module": "ESNext",
-        "jsx": "react-jsx",
-        "strict": true,
-        "moduleResolution": "Node",
-        "types": [
-            "vite/client"
-        ]
-    }
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }
