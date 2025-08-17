@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { parseDDL } from './lib/parseDDL';
 import { generateSql } from './lib/generateSql';
 import SchemaTree from './SchemaTree';
+// Northwind example DDL (raw import)
+// Vite supports importing text with ?raw; keep file small enough for bundling.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import northwindDDL from './assets/northwind.sql?raw';
 
 export default function App() {
   const ddl = useStore((s) => s.ddl);
@@ -75,6 +80,12 @@ pg_restore -L keep.list -f concise.sql /tmp/db.dump`}</code></pre>
             </div>
           </div>
         </details>
+        <div className="mb-2">
+          <button
+            className="text-xs border rounded px-2 py-1 hover:bg-slate-100"
+            onClick={() => setDDL(northwindDDL)}
+          >Load Northwind example</button>
+        </div>
         <textarea
           className="flex-1 border p-1 resize-none font-mono"
           placeholder="Paste CREATE TABLE …"
