@@ -35,6 +35,46 @@ export default function App() {
       {/* DDL input */}
       <section className="border p-2 flex flex-col">
         <header className="font-bold mb-1">DDL</header>
+        <details open={false} className="mb-2">
+          <summary className="cursor-pointer font-medium rounded px-1 hover:bg-slate-100">Instructions</summary>
+          <div className="text-sm space-y-3 mt-2">
+            <div>
+              <p className="font-semibold">How to use</p>
+              <ol className="list-decimal pl-5 space-y-1 mt-1">
+                <li>Paste your PostgreSQL schema DDL (CREATE TABLE / ALTER TABLE) into the textarea.</li>
+                <li>Wait ~300ms while it parses; any errors appear in the Schema pane.</li>
+                <li>Expand tables and check either <code>table.*</code> or individual columns.</li>
+                <li>Star vs columns are mutually exclusive per table; the first table you add becomes the base.</li>
+                <li>The SQL pane shows a formatted SELECT with LEFT JOINs; use the Copy button to copy SQL.</li>
+                <li>Use the search box above the tree to quickly filter large schemas.</li>
+              </ol>
+            </div>
+            <div>
+              <p className="font-semibold">Dumping your schema (generic Postgres)</p>
+              <p className="mt-1">Option 1 — From a local/network Postgres:</p>
+              <pre className="bg-slate-100 p-2 overflow-auto text-xs"><code>{`# list tables (optional)
+psql -h <host> -p <port> -U <user> -d <database> -c "\\dt"
+
+# dump schema-only (plain SQL) to a file you can paste here
+pg_dump -h <host> -p <port> -U <user> -d <database> -s -O -x --no-comments \
+  > schema.sql`}</code></pre>
+              <p className="mt-2">Option 2 — When Postgres runs in Docker:</p>
+              <pre className="bg-slate-100 p-2 overflow-auto text-xs"><code>{`# run pg_dump inside the container and write to a host file
+docker exec <container_name> \
+  pg_dump -U <user> -d <database> -s -O -x --no-comments \
+  > schema.sql`}</code></pre>
+              <p className="mt-2">Optional — produce a concise schema (tables + PK/FK/UNIQUE only):</p>
+              <pre className="bg-slate-100 p-2 overflow-auto text-xs"><code>{`# create a custom-format archive
+pg_dump -h <host> -p <port> -U <user> -d <database> -s -O -x --no-comments -Fc \
+  -f /tmp/db.dump
+
+# list contents and keep only schema/table/constraints lines
+pg_restore -l /tmp/db.dump > toc.list
+awk '/ SCHEMA / || / TABLE / || (/ CONSTRAINT / && (/ PRIMARY KEY / || / FOREIGN KEY / || / UNIQUE /))' toc.list > keep.list
+pg_restore -L keep.list -f concise.sql /tmp/db.dump`}</code></pre>
+            </div>
+          </div>
+        </details>
         <textarea
           className="flex-1 border p-1 resize-none font-mono"
           placeholder="Paste CREATE TABLE …"
