@@ -2,6 +2,7 @@ import { useStore } from './store';
 
 import { useEffect, useState } from 'react';
 import { parseDDL } from './lib/parseDDL';
+import { generateSql } from './lib/generateSql';
 import SchemaTree from './SchemaTree';
 
 export default function App() {
@@ -10,6 +11,8 @@ export default function App() {
   const ddlLen = useStore((s) => s.ddl.length);
   const setSchema = useStore((s) => s.setSchema);
   const base = useStore((s) => s.base);
+  const schema = useStore((s) => s.schema);
+  const selections = useStore((s) => s.selections);
   const [parseError, setParseError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function App() {
       <section className="border p-2 overflow-auto bg-gray-50">
         <header className="font-bold mb-1">SQL {base && <span className="text-sm text-gray-500">(base: {base})</span>}</header>
         <pre className="whitespace-pre-wrap text-sm text-gray-700">
-          -- SQL appears here
+          {generateSql(schema, base, selections)}
         </pre>
       </section>
     </div>

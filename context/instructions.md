@@ -87,6 +87,7 @@ git commit -m "stage 0 scaffold"
 
 ---
 
+
 ## STAGE 6 — Join‑planner stub & live SQL pipe (1 h)
 
 | Goal                                                           | Outcome                            |
@@ -95,28 +96,13 @@ git commit -m "stage 0 scaffold"
 
 ### Tasks
 
-1. `src/lib/generateSql.ts`
-
-   ```ts
-   import { format } from 'sql-formatter';
-   import { SchemaGraph } from '../store';
-
-   export function generateSql(schema: SchemaGraph | null, base: string | null, sels: string[]) {
-     if (!schema || !base) return '-- select columns to start';
-     return format('SELECT /* TODO implement */', { language: 'postgresql', keywordCase: 'upper' });
-   }
-   ```
-2. In SQL pane’s `<pre>`:
-
-   ```tsx
-   const { schema, base, selections } = useStore();
-   const sql = generateSql(schema, base, selections);
-   <pre …>{sql}</pre>
-   ```
+- [x] `src/lib/generateSql.ts` stub
+- [x] SQL pane uses generateSql
+- [x] sql-formatter installed
 
 ### Acceptance
 
-* After selecting any column, SQL pane shows a formatted `SELECT /* TODO implement */`.
+- [x] After selecting any column, SQL pane shows a formatted `SELECT /* TODO implement */`.
 
 ---
 
