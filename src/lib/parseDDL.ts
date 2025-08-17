@@ -49,9 +49,12 @@ export function parseDDL(ddl: string) {
                 for (const cU of constraints) {
                     const c = cU as Record<string, unknown>;
                     const ctype = getTypeStr(c);
-                    if (ctype === 'references') {
-                        const toTable = getNameStr(get(c, 'table')) ?? '';
-                        const ccolsU = get(c, 'columns');
+                    if (ctype === 'references' || ctype === 'reference') {
+                        // Support both shapes: { table, columns } and { foreignTable, foreignColumns }
+                        const toTable = getNameStr(get(c, 'table'))
+                            ?? getNameStr(get(c, 'foreignTable'))
+                            ?? '';
+                        const ccolsU = get(c, 'columns') ?? get(c, 'foreignColumns');
                         const ccols: unknown[] = Array.isArray(ccolsU) ? ccolsU : [];
                         const toCols = ccols
                             .map((x) => getNameStr(x))
@@ -89,9 +92,11 @@ export function parseDDL(ddl: string) {
                         .map((x) => getNameStr(x))
                         .filter((v): v is string => typeof v === 'string');
 
-                    const refs = get(c, 'references');
-                    const toTable = getNameStr(get(refs, 'table')) ?? '';
-                    const toColsU = get(refs, 'columns');
+                    const refs = get(c, 'references') ?? c;
+                    const toTable = getNameStr(get(refs, 'table'))
+                        ?? getNameStr(get(refs, 'foreignTable'))
+                        ?? '';
+                    const toColsU = get(refs, 'columns') ?? get(refs, 'foreignColumns');
                     const toColsArr: unknown[] = Array.isArray(toColsU) ? toColsU : [];
                     const toCols = toColsArr
                         .map((x) => getNameStr(x))
