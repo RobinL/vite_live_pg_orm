@@ -8,6 +8,17 @@ type Edge = {
     toCols: string[];
 };
 
+const quoteIdent = (name: string): string => {
+    // Quote if not a simple unquoted identifier
+    // Simple: starts with [a-z_] then [a-z0-9_]*, all lowercase
+    if (/^[a-z_][a-z0-9_]*$/.test(name)) return name;
+    // Also support dotted names (schema.table) by quoting each part
+    return name
+        .split('.')
+        .map((p) => '"' + String(p).replace(/"/g, '""') + '"')
+        .join('.');
+};
+
 export function generateSql(
     schema: SchemaGraph | null,
     base: string | null,
@@ -46,17 +57,20 @@ export function generateSql(
     const targetTables = Array.from(selMap.keys()).filter((t) => t !== base);
     const warnings: string[] = [];
 
-    const shortestPathBFS = (start: string, goal: string): Edge[] | null => {
-        if (start === goal) return [];
+    const shortestPathBFS = (start: string, goal: string): { path: Edge[] | null; ambiguous: boolean } => {
+        if (start === goal) return { path: [], ambiguous: false };
         const q: string[] = [start];
-        const visited = new Set<string>([start]);
+        const depth = new Map<string, number>([[start, 0]]);
         const parent: Record<string, { prev: string; edge: Edge } | undefined> = {};
+        let ambiguous = false;
         while (q.length) {
             const cur = q.shift()!;
+            const curDepth = depth.get(cur)!;
             for (const e of graph[cur] || []) {
                 const nxt = e.to;
-                if (!visited.has(nxt)) {
-                    visited.add(nxt);
+                const seenDepth = depth.get(nxt);
+                if (seenDepth === undefined) {
+                    depth.set(nxt, curDepth + 1);
                     parent[nxt] = { prev: cur, edge: e };
                     if (nxt === goal) {
                         // reconstruct
@@ -68,22 +82,29 @@ export function generateSql(
                             t = p.prev;
                         }
                         path.reverse();
-                        return path;
+                        return { path, ambiguous };
                     }
                     q.push(nxt);
+                } else if (seenDepth === curDepth + 1) {
+                    // Another equal-cost path to `nxt`
+                    ambiguous = true;
                 }
             }
         }
-        return null;
+        return { path: null, ambiguous };
     };
 
     // Collect union of edges from base to each target
     const paths: Edge[][] = [];
     for (const tgt of targetTables) {
-        const path = shortestPathBFS(base, tgt);
+        const res = shortestPathBFS(base, tgt);
+        const path = res.path;
         if (!path) {
             warnings.push(`No FK path from ${base} to ${tgt}; omitting its columns.`);
             continue;
+        }
+        if (res.ambiguous) {
+            warnings.push(`Multiple equal-cost join paths from ${base} to ${tgt}; choosing one deterministically.`);
         }
         paths.push(path);
     }
@@ -147,17 +168,17 @@ export function generateSql(
     lines.push('SELECT');
     lines.push('  ' + selectItems.join(',\n  '));
     lines.push('FROM');
-    lines.push(`  ${base} AS ${alias.get(base)!}`);
+    lines.push(`  ${quoteIdent(base)} AS ${alias.get(base)!}`);
     for (const e of ordered) {
         const l = alias.get(e.from)!;
         const r = alias.get(e.to)!;
         const pairs = Math.min(e.fromCols.length, e.toCols.length);
         const onParts: string[] = [];
         for (let i = 0; i < pairs; i++) {
-            onParts.push(`${l}."${e.fromCols[i]}" = ${r}."${e.toCols[i]}"`);
+            onParts.push(`${l}.${quoteIdent(e.fromCols[i])} = ${r}.${quoteIdent(e.toCols[i])}`);
         }
         const onClause = onParts.length ? onParts.join(' AND ') : '1=1';
-        lines.push(`LEFT JOIN ${e.to} AS ${r} ON ${onClause}`);
+        lines.push(`LEFT JOIN ${quoteIdent(e.to)} AS ${r} ON ${onClause}`);
     }
 
     const sql = format(lines.join('\n') + ';', {

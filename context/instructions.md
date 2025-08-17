@@ -156,7 +156,14 @@ git commit -m "stage 0 scaffold"
 | **Quoted identifiers**      | implement `quoteIdent` (wrap if not /^\[a-z\_]\[a-z0-9\_]\*\$/)                           |
 | **Two roles to same table** | when BFS sees *two equal‑cost paths*, prompt user which to use (`window.confirm` MVP)     |
 | **Large DDL freeze**        | debounce parse 300 ms; if ddl.length > 50k then parse in a WebWorker (vite-plugin‑worker) |
+### Status
 
+- [x] Quoted identifiers via `quoteIdent` in generator
+- [x] Equal-cost BFS path detection with a warning (deterministic choice)
+- [x] Composite FK handled (array pair loop)
+- [x] Debounced parsing already implemented
+
+This plan keeps each step **atomic and verifiable**; you’ll have a working application as early as Stage 4 and a feature‑complete MVP by Stage 8.
 ---
 
 ## Done 🎉 — Deliverables
