@@ -38,4 +38,9 @@ describe('buildGraphFromDDL (Northwind)', () => {
             f.toCols.length === 1 && f.toCols[0] === 'employee_id'
         )).toBe(true);
     });
+
+        it('stats present and plausible', () => {
+            expect(g.stats?.tableCount).toBe(14);
+            expect((g.stats?.fkCount ?? 0) >= 12).toBe(true);
+        });
 });
