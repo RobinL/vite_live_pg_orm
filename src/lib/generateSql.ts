@@ -1,5 +1,5 @@
 import type { SchemaGraph } from './types';
-import { plan } from './plan';
+import { planJoins } from './plan';
 import { emitSQL } from './sql';
 
 export function generateSql(
@@ -7,7 +7,8 @@ export function generateSql(
     base: string | null,
     sels: string[]
 ): { sql: string; warnings: string[] } {
-    const p = plan(schema, base, sels);
+    if (!schema || !base || !sels.length) return { sql: '-- select columns to start', warnings: [] };
+    const p = planJoins(schema, base, sels);
     if (!p) return { sql: '-- select columns to start', warnings: [] };
     const sql = emitSQL(p);
     return { sql, warnings: p.warnings };

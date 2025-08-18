@@ -19,7 +19,7 @@ function expandSelections(selections: string[]): Selection[] {
     return out;
 }
 
-export function plan(graph: SchemaGraph | null, base: string | null, selections: string[]): Plan | null {
+export function planJoins(graph: SchemaGraph | null, base: string | null, selections: string[]): Plan | null {
     if (!graph || !base || !selections.length) return null;
 
     // Build adjacency using FKs in both directions
@@ -40,6 +40,7 @@ export function plan(graph: SchemaGraph | null, base: string | null, selections:
     // BFS with lexicographic tie-break on parent id
     const parent = new Map<string, { prev: string; edge: Edge }>();
     const depth = new Map<string, number>();
+    const ambiguousAtNode = new Map<string, boolean>();
     const queue: string[] = [base];
     depth.set(base, 0);
     while (queue.length) {
@@ -51,6 +52,9 @@ export function plan(graph: SchemaGraph | null, base: string | null, selections:
                 depth.set(e.to, nextDepth);
                 parent.set(e.to, { prev: cur, edge: e });
                 queue.push(e.to);
+            } else if (depth.get(e.to) === nextDepth) {
+                // Found another equal-cost way to reach e.to
+                ambiguousAtNode.set(e.to, true);
             }
         }
     }
@@ -97,7 +101,10 @@ export function plan(graph: SchemaGraph | null, base: string | null, selections:
     const steps: JoinStep[] = ordered.map(e => ({ from: e.from, to: e.to, fk: e.via }));
     const select = expandSelections(selections);
     const warnings: string[] = [];
-    for (const tgt of targets) if (!depth.has(tgt)) warnings.push(`No FK path from ${base} to ${tgt}; omitting its columns.`);
+    for (const tgt of targets) {
+        if (!depth.has(tgt)) warnings.push(`No FK path from ${base} to ${tgt}; omitting its columns.`);
+        else if (ambiguousAtNode.get(tgt)) warnings.push(`Multiple equal-cost join paths from ${base} to ${tgt}; choosing one deterministically.`);
+    }
 
     return { base, steps, tableAlias, select, warnings };
 }
