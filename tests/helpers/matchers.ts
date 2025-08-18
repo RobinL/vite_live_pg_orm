@@ -16,6 +16,7 @@ expect.extend({
 });
 
 declare module 'vitest' {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interface Assertion<T = any> {
         toHaveJoinPath(expected: ReadonlyArray<string>): T
     }

@@ -1,8 +1,6 @@
 import { create } from 'zustand';
-import type { Table } from './lib/parseDDL';
+import type { SchemaGraph } from './lib/types';
 import { toggleSelectionReducer } from './lib/selectionReducer';
-
-export interface SchemaGraph { tables: Record<string, Table> }
 
 export const useStore = create<{
     ddl: string;

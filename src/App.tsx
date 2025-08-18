@@ -1,7 +1,7 @@
 import { useStore } from './store';
 
 import { useEffect, useState } from 'react';
-import { parseDDL } from './lib/parseDDL';
+import { buildGraphFromDDL } from './lib/buildGraph';
 import { generateSql } from './lib/generateSql';
 import SchemaTree from './SchemaTree';
 // Northwind example DDL (raw import)
@@ -23,7 +23,7 @@ export default function App() {
   useEffect(() => {
     const id = setTimeout(() => {
       try {
-        const g = ddl.trim() ? parseDDL(ddl) : null;
+        const g = ddl.trim() ? buildGraphFromDDL(ddl) : null;
         setSchema(g);
         setParseError(null);
       } catch (e: unknown) {

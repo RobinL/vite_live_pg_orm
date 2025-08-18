@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { buildGraphFromDDL } from '../src/lib/buildGraph';
 import { planJoins } from '../src/lib/plan';
-import { emitSQL, canonicalize } from '../src/lib/sql';
+import { emitSQL } from '../src/lib/sql';
+import { canonicalize } from './helpers/canon';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -17,30 +18,19 @@ describe('planner edge cases', () => {
         const p = planJoins(g, 'a', ['d.*']);
         expect(p).toBeTruthy();
         const plan = p!;
-        // Should choose lexicographically by neighbor (b before c)
-        const joinTargets = plan.steps.map(s => s.to);
-        expect(joinTargets).toContain('b');
-        expect(joinTargets).toContain('d');
+        // Should choose lexicographically by neighbor (b before c); assert exact path
+        expect(plan).toHaveJoinPath(['a->b', 'b->d']);
         expect(plan.warnings.find(w => /Multiple equal-cost join paths/i.test(w))).toBeTruthy();
         const sql = emitSQL(plan);
         expect(sql).toMatch(/left join "?b"?/i);
     });
 
-    it('self-fk: join employees to itself via reports_to', () => {
+    it('self-fk: selecting only base does not create a self-join', () => {
         const ddl = fixture('self_fk.sql');
         const g = buildGraphFromDDL(ddl);
         const p = planJoins(g, 'employees', ['employees.*']);
-        // selecting only base -> no joins
         expect(p).toBeTruthy();
         expect(p!.steps.length).toBe(0);
-
-        // selecting manager table columns forces a self-join path
-        const p2 = planJoins(g, 'employees', ['employees.*', 'employees.name']);
-        expect(p2).toBeTruthy();
-        // still no join because both are base; simulate selecting via path by using alias target (no separate table exists)
-        // Instead, ensure planner handles self edge when base appears as target
-        const p3 = planJoins(g, 'employees', ['employees.*']);
-        expect(p3!.steps.length).toBe(0);
     });
 
     it('composite: ON clause includes both columns', () => {

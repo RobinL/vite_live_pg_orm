@@ -36,6 +36,3 @@ export function emitSQL(plan: Plan): string {
     return lines.join('\n') + ';';
 }
 
-export function canonicalize(sql: string): string {
-    return sql.replace(/\s+/g, ' ').trim().toLowerCase();
-}
