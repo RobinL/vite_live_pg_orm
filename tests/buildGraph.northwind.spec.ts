@@ -39,8 +39,8 @@ describe('buildGraphFromDDL (Northwind)', () => {
         )).toBe(true);
     });
 
-        it('stats present and plausible', () => {
-            expect(g.stats?.tableCount).toBe(14);
-            expect((g.stats?.fkCount ?? 0) >= 12).toBe(true);
-        });
+    it('stats present and plausible', () => {
+        expect(g.stats?.tableCount).toBe(14);
+        expect((g.stats?.fkCount ?? 0) >= 12).toBe(true);
+    });
 });

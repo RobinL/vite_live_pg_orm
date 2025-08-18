@@ -12,16 +12,16 @@ describe('buildGraphFromDDL (mini)', () => {
         expect(g.tables.orders.columns).toContain('employee_id');
     });
 
-        it('captures PK & FK', () => {
+    it('captures PK & FK', () => {
         expect(g.tables.customers.primaryKey).toEqual(['customer_id']);
         const fks = g.tables.orders.fks;
-            expect(fks).toEqual([
-                expect.objectContaining({ fromTable: 'orders', fromCols: ['customer_id'], toTable: 'customers', toCols: ['customer_id'] })
-            ]);
+        expect(fks).toEqual([
+            expect.objectContaining({ fromTable: 'orders', fromCols: ['customer_id'], toTable: 'customers', toCols: ['customer_id'] })
+        ]);
     });
 
-        it('normalizes keys (no public.)', () => {
-            expect(g.tables['public.customers']).toBeUndefined();
-            expect(g.tables.customers).toBeDefined();
-        });
+    it('normalizes keys (no public.)', () => {
+        expect(g.tables['public.customers']).toBeUndefined();
+        expect(g.tables.customers).toBeDefined();
+    });
 });
