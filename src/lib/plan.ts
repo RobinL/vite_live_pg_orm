@@ -90,12 +90,26 @@ export function planJoins(graph: SchemaGraph | null, base: string | null, select
         if (!progressed) break;
     }
 
-    // Aliases: base t0, then newly encountered tables in order
+    // Aliases: base = t0, then BFS over the subgraph formed by `ordered` edges (first-seen order)
     const tableAlias: Record<string, string> = { [base]: 't0' };
+    const planNodes = new Set<string>([base]);
+    for (const e of ordered) { planNodes.add(e.from); planNodes.add(e.to); }
+    const planAdj = new Map<string, Set<string>>();
+    for (const n of planNodes) planAdj.set(n, new Set());
+    for (const e of ordered) { planAdj.get(e.from)!.add(e.to); planAdj.get(e.to)!.add(e.from); }
     let n = 1;
-    for (const e of ordered) {
-        if (!tableAlias[e.from]) tableAlias[e.from] = `t${n++}`;
-        if (!tableAlias[e.to]) tableAlias[e.to] = `t${n++}`;
+    const q: string[] = [base];
+    const seen = new Set<string>([base]);
+    while (q.length) {
+        const cur = q.shift()!;
+        const nbrs = Array.from(planAdj.get(cur) || []).sort();
+        for (const nb of nbrs) {
+            if (!seen.has(nb)) {
+                seen.add(nb);
+                if (!tableAlias[nb]) tableAlias[nb] = `t${n++}`;
+                q.push(nb);
+            }
+        }
     }
 
     const steps: JoinStep[] = ordered.map(e => ({ from: e.from, to: e.to, fk: e.via }));

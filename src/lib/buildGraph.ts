@@ -109,13 +109,12 @@ export function buildGraphFromDDL(ddl: string): SchemaGraph {
     for (const t of Object.values(tables)) {
         t.columns = [...new Set(t.columns)].sort();
         t.primaryKey = [...new Set(t.primaryKey)].sort();
-        t.fks = t.fks.sort((a, b) => {
-            return a.fromTable.localeCompare(b.fromTable)
-                || a.toTable.localeCompare(b.toTable)
-                || a.fromCols.join(',').localeCompare(b.fromCols.join(','))
-                || a.toCols.join(',').localeCompare(b.toCols.join(','))
-                || (a.constraintName || '').localeCompare(b.constraintName || '');
-        });
+        t.fks = t.fks.sort((a, b) =>
+            a.fromTable.localeCompare(b.fromTable)
+            || a.toTable.localeCompare(b.toTable)
+            || a.fromCols.join(',').localeCompare(b.fromCols.join(','))
+            || a.toCols.join(',').localeCompare(b.toCols.join(','))
+        );
         fkCount += t.fks.length;
     }
 
