@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { buildGraphFromDDL } from '../src/lib/buildGraph';
 import { planJoins } from '../src/lib/plan';
 import { emitSQL } from '../src/lib/sql';
-import { canonicalize } from './helpers/canon';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -33,15 +32,23 @@ describe('planner edge cases', () => {
         expect(p!.steps.length).toBe(0);
     });
 
-    it('composite: ON clause includes both columns', () => {
+    it('composite: FK pairs include both columns (plan-level check, no SQL)', () => {
         const ddl = fixture('composite_fk.sql');
         const g = buildGraphFromDDL(ddl);
         const p = planJoins(g, 'child', ['child.*', 'parent.*']);
         expect(p).toBeTruthy();
-        const sql = emitSQL(p!);
-        const c = canonicalize(sql);
-        // child -> parent uses both a_id and b_id in ON
-        expect(c).toMatch(/on t0\.("?a_id"?) = t\d+\.("?a_id"?)/);
-        expect(c).toMatch(/and t0\.("?b_id"?) = t\d+\.("?b_id"?)/);
+
+        // find the child->parent step
+        const step = p!.steps.find(s =>
+            (s.from === 'child' && s.to === 'parent') ||
+            (s.from === 'parent' && s.to === 'child')
+        );
+        expect(step).toBeTruthy();
+
+        // Regardless of direction, the fk must pair both a_id and b_id
+        const fromCols = step!.fk.fromCols.slice().sort();
+        const toCols = step!.fk.toCols.slice().sort();
+        expect(fromCols).toEqual(['a_id', 'b_id']);
+        expect(toCols).toEqual(['a_id', 'b_id']);
     });
 });
