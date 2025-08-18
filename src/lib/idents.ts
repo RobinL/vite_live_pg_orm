@@ -1,4 +1,4 @@
-export const stripSchema = (s: string) => s.replace(/^public\./i, '');
+export const stripSchema = (s: string) => s.replace(/^(?:"[^"]+"|[a-zA-Z_][\w$]*)\./, '');
 export const unquote = (s: string) => s.replace(/^"+|"+$/g, '');
 export const normalize = (s: string) => unquote(stripSchema(s)).toLowerCase();
 

@@ -113,7 +113,8 @@ export function planJoins(graph: SchemaGraph | null, base: string | null, select
     }
 
     const steps: JoinStep[] = ordered.map(e => ({ from: e.from, to: e.to, fk: e.via }));
-    const select = expandSelections(selections);
+    const reachable = new Set(Object.keys(tableAlias));
+    const select = expandSelections(selections).filter(s => reachable.has(s.table));
     const warnings: string[] = [];
     for (const tgt of targets) {
         if (!depth.has(tgt)) warnings.push(`No FK path from ${base} to ${tgt}; omitting its columns.`);

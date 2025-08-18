@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { parse } from 'pgsql-ast-parser';
 import type { SchemaGraph, Table, ForeignKey } from './types';
 import { normalize } from './idents';
@@ -60,47 +61,68 @@ export function buildGraphFromDDL(ddl: string): SchemaGraph {
                 }
             }
         }
-    }
-
-    // 2) ALTER TABLE … ADD CONSTRAINT … PRIMARY/FOREIGN KEY (regex fallback for pg_dump)
-    const statements: string[] = [];
-    {
-        let buf = '';
-        for (const ln of ddl.split('\n')) {
-            buf += ln + ' ';
-            if (ln.trim().endsWith(';')) {
-                statements.push(buf.replace(/\s+/g, ' ').trim());
-                buf = '';
-            }
-        }
-    }
-
-    const splitCols = (g: string) => g.split(',').map(s => normalize(s.trim()));
-    // make schema optional and allow quoted idents
-    const pkRe = /ALTER TABLE ONLY\s+(?:public\.)?"?([a-zA-Z0-9_]+)"?\s+ADD CONSTRAINT\s+"?([a-zA-Z0-9_]+)"?\s+PRIMARY KEY\s*\(([^)]+)\)\s*;/i;
-    const fkRe = /ALTER TABLE ONLY\s+(?:public\.)?"?([a-zA-Z0-9_]+)"?\s+ADD CONSTRAINT\s+"?([a-zA-Z0-9_]+)"?\s+FOREIGN KEY\s*\(([^)]+)\)\s+REFERENCES\s+(?:public\.)?"?([a-zA-Z0-9_]+)"?\s*\(([^)]+)\)\s*;/i;
-
-    for (const st of statements) {
-        let m = st.match(pkRe);
-        if (m) {
-            const qualified = m[1];
+        else if (stmt?.type === 'alter table') {
+            // Robustly read schema-qualified table name
+            const tbl = (stmt as any).table ?? {};
+            // Support both {schema, name} and nested shapes
+            const schema = tbl.schema ? String(tbl.schema) : (tbl.name?.schema ? String(tbl.name.schema) : undefined);
+            const rawName = tbl.name ? String(tbl.name) : (tbl.name?.name ? String(tbl.name.name) : '');
+            if (!rawName) continue;
+            const qualified = schema ? `${schema}.${rawName}` : rawName;
             const t = ensureTable(qualified);
-            t.primaryKey = Array.from(new Set(splitCols(m[3])));
-            continue;
-        }
-        m = st.match(fkRe);
-        if (m) {
-            const fromQualified = m[1];
-            const constraintName = m[2];
-            const fromCols = splitCols(m[3]);
-            const toQualified = m[4];
-            const toCols = splitCols(m[5]);
-            const fromTable = normalize(fromQualified);
-            const toTable = normalize(toQualified);
-            const t = ensureTable(fromQualified);
-            const fk: ForeignKey = { fromTable, fromCols, toTable, toCols, constraintName } as ForeignKey;
-            t.fks.push(fk);
-            continue;
+
+            const changes = Array.isArray((stmt as any).changes) ? (stmt as any).changes : [];
+            for (const ch of changes) {
+                if (!ch || ch.type !== 'add constraint') continue;
+                const cons = ch.constraint ?? ch;
+                const ctype = cons?.type;
+
+                // PRIMARY KEY
+                if (ctype === 'primary key') {
+                    const colsU = cons.columns ?? cons.localColumns ?? [];
+                    const cols = (Array.isArray(colsU) ? colsU : [])
+                        .map((x: any) => x?.name ?? x)
+                        .filter(Boolean)
+                        .map((s: string) => normalize(String(s)));
+                    t.primaryKey = Array.from(new Set(cols));
+                    continue;
+                }
+
+                // FOREIGN KEY
+                if (ctype === 'foreign key') {
+                    // local columns
+                    const fromU = cons.localColumns ?? cons.columns ?? [];
+                    const fromCols = (Array.isArray(fromU) ? fromU : [])
+                        .map((x: any) => x?.name ?? x)
+                        .filter(Boolean)
+                        .map((s: string) => normalize(String(s)));
+
+                    // referenced table + columns; accept both shapes
+                    const ref = cons.references ?? cons;
+                    const refTbl = ref.foreignTable ?? ref.table ?? ref.name ?? {};
+                    const refSchema = refTbl.schema ? String(refTbl.schema) : (refTbl.name?.schema ? String(refTbl.name.schema) : undefined);
+                    const refName = refTbl.name ? String(refTbl.name) : (refTbl.name?.name ? String(refTbl.name.name) : (typeof refTbl === 'string' ? refTbl : ''));
+                    if (!refName) continue;
+
+                    const toQualified = refSchema ? `${refSchema}.${refName}` : refName;
+
+                    const toU = ref.foreignColumns ?? ref.columns ?? [];
+                    const toCols = (Array.isArray(toU) ? toU : [])
+                        .map((x: any) => x?.name ?? x)
+                        .filter(Boolean)
+                        .map((s: string) => normalize(String(s)));
+
+                    const fk: ForeignKey = {
+                        fromTable: normalize(qualified),
+                        fromCols,
+                        toTable: normalize(toQualified),
+                        toCols,
+                        constraintName: cons.name?.name ? String(cons.name.name) : undefined,
+                    };
+                    t.fks.push(fk);
+                    continue;
+                }
+            }
         }
     }
 
